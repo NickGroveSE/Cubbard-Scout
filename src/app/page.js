@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Image from "next/image";
 import styles from "./page.module.css";
 
@@ -22,31 +22,40 @@ const Item = styled(Paper)(({ theme }) => ({
   color: theme.palette.text.secondary
 }));
 
-const food = ["bread", "apples"]
 
-const Food = () => {
-  const items = food.map((food,index)=>
-    <Stack key={index} spacing={2}>{food}</Stack>)
-  return <Item>{items}</Item>
-}
 
 export default function Home() {
-  const fetchData = async () => {
+
+  const [inventory, setInventory] = useState([])
+  const [open, setOpen] = useState(false)
+  const [itemName, setItemName] = useState('')
+
+  const fetchInventory = async () => {
     try {
+
       const q = query(collection(firestore, "inventory"))
       const querySnapshot = await getDocs(q)
+      const inventoryList = []
+
       querySnapshot.forEach((doc) => {
-        // doc.data() is never undefined for query doc snapshots
-        console.log(doc.id, " => ", doc.data())
+        inventoryList.push({ name: doc.id, ...doc.data() })
       });
+      setInventory(inventoryList)
+
     } catch (error) {
       console.error('Error fetching data:', error)
     }
   }
 
   useEffect(() => {
-    fetchData()
+    fetchInventory()
   }, [])
+
+  const Food = () => {
+    const items = inventory.map((food,index)=>
+      <Stack key={index} spacing={2}>{food.name}</Stack>)
+    return <Item>{items}</Item>
+  }
 
 
   return (
