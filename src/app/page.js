@@ -14,15 +14,11 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 import { firestore } from '@/firebase';
 
-
-
 const Item = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(1),
   textAlign: "center",
   color: theme.palette.text.secondary
 }));
-
-
 
 export default function Home() {
 
@@ -30,7 +26,7 @@ export default function Home() {
   const [open, setOpen] = useState(false)
   const [itemName, setItemName] = useState('')
 
-  const fetchInventory = async () => {
+  const updateInventory = async () => {
     try {
 
       const q = query(collection(firestore, "inventory"))
@@ -48,8 +44,34 @@ export default function Home() {
   }
 
   useEffect(() => {
-    fetchInventory()
+    updateInventory()
   }, [])
+
+  const addItem = async (item) => {
+    const docRef = doc(collection(firestore, 'inventory'), item)
+    const docSnap = await getDoc(docRef)
+    if (docSnap.exists()) {
+      const { quantity } = docSnap.data()
+      await setDoc(docRef, { quantity: quantity + 1 })
+    } else {
+      await setDoc(docRef, { quantity: 1 })
+    }
+    await updateInventory()
+  }
+
+  const removeItem = async (item) => {
+    const docRef = doc(collection(firestore, 'inventory'), item)
+    const docSnap = await getDoc(docRef)
+    if (docSnap.exists()) {
+      const { quantity } = docSnap.data()
+      if (quantity === 1) {
+        await deleteDoc(docRef)
+      } else {
+        await setDoc(docRef, { quantity: quantity - 1 })
+      }
+    }
+    await updateInventory()
+  }
 
   const Food = () => {
     const items = inventory.map((food,index)=>
