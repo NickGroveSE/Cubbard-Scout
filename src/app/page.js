@@ -12,7 +12,7 @@ import { styled } from "@mui/material/styles";
 
 // Firebase
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
+import { getFirestore, collection, query, where, getDocs, getDoc, doc, setDoc } from "firebase/firestore";
 import { firestore } from '@/firebase';
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -56,10 +56,10 @@ export default function Home() {
     const docRef = doc(collection(firestore, 'inventory'), item)
     const docSnap = await getDoc(docRef)
     if (docSnap.exists()) {
-      const { quantity } = docSnap.data()
-      await setDoc(docRef, { quantity: quantity + 1 })
+      const { quantity, expDate } = docSnap.data()
+      await setDoc(docRef, { quantity: quantity + 1, expDate: expDate })
     } else {
-      await setDoc(docRef, { quantity: 1 })
+      await setDoc(docRef, { quantity: 1, expDate: expDate })
     }
     await updateInventory()
   }
@@ -68,14 +68,26 @@ export default function Home() {
     const docRef = doc(collection(firestore, 'inventory'), item)
     const docSnap = await getDoc(docRef)
     if (docSnap.exists()) {
-      const { quantity } = docSnap.data()
+      const { quantity, expDate } = docSnap.data()
       if (quantity === 1) {
         await deleteDoc(docRef)
       } else {
-        await setDoc(docRef, { quantity: quantity - 1 })
+        await setDoc(docRef, { quantity: quantity - 1, expDate: expDate })
       }
     }
     await updateInventory()
+  }
+
+  const customQuantity = async (item, itemQuantity) => {
+    const docRef = doc(collection(firestore, 'inventory'), item)
+    const docSnap = await getDoc(docRef)
+    if (docSnap.exists()) {
+      const { quantity, expDate } = docSnap.data()
+      const q = Number(itemQuantity)
+      await setDoc(docRef, { quantity: q, expDate: expDate })
+    } else {
+      console.log("Input is not an integer, try again")
+    }
   }
 
   const handleOpen = () => setOpen(true)
@@ -102,18 +114,15 @@ export default function Home() {
             float: 'right'
             }}
           >
-              <Add fontSize="large" />
+              <Add onClick={() => addItem(food.name)} fontSize="large" />
           </IconButton>
-          <TextField id="outlined-basic" defaultValue={food.quantity} variant="outlined" size='small' sx={{float: 'right', width: 45, marginTop: 0.5}}/>
+          <TextField onChange={(event) => customQuantity(food.name, event.target.value)} id="outlined-basic" defaultValue={food.quantity} variant="outlined" size='small' sx={{float: 'right', width: 45, marginTop: 0.5}}/>
           <IconButton disableRipple sx={{
             "&:hover": { backgroundColor: "transparent" }, 
             float: 'right'
             }}
           >
-            <Remove fontSize="large" sx={{
-              ":hover &": {boxShadow: '100px 5px 5px red'},
-              ":hover": {color: "#A7C7E7"}
-            }}/>
+            <Remove onClick={() => removeItem(food.name)} fontSize="large"/>
           </IconButton>
         </Box>
       </Item>)
