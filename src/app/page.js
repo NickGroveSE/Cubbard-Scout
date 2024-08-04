@@ -6,14 +6,29 @@ import styles from "./page.module.css";
 
 // Material UI
 import Paper from "@mui/material/Paper";
-import { Box, Grid, Stack, AppBar, IconButton, TextField} from '@mui/material';
-import { Remove, Add, Edit } from '@mui/icons-material';
+import { Box, Grid, Stack, AppBar, IconButton, TextField, Modal, Typography, Button} from '@mui/material';
+import { Remove, Add, Edit, Done } from '@mui/icons-material';
 import { styled } from "@mui/material/styles";
 
 // Firebase
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, query, where, getDocs, getDoc, doc, setDoc } from "firebase/firestore";
 import { firestore } from '@/firebase';
+
+const style = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 400,
+  bgcolor: 'white',
+  border: '2px solid #000',
+  boxShadow: 24,
+  p: 4,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 3,
+}
 
 const Item = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(1),
@@ -30,6 +45,7 @@ export default function Home() {
   const [inventory, setInventory] = useState([])
   const [open, setOpen] = useState(false)
   const [itemName, setItemName] = useState('')
+  const [itemExpDate, setItemExpDate] = useState('')
 
   const updateInventory = async () => {
     try {
@@ -90,12 +106,56 @@ export default function Home() {
     }
   }
 
+  const editItem = async (item, expDate) => {
+
+  }
+
   const handleOpen = () => setOpen(true)
   const handleClose = () => setOpen(false)
 
   const Food = () => {
     const items = inventory.map((food,index)=>
       <Item key={index} spacing={2} sx={{ display: 'inline-block'}}>
+        <Modal
+          open={open}
+          onClose={handleClose}
+          aria-labelledby="modal-modal-title"
+          aria-describedby="modal-modal-description"
+        >
+          <Box sx={style}>
+            <Typography id="modal-modal-title" variant="h6" component="h2">
+              Edit Item
+            </Typography>
+            <Stack width="100%" direction={'row'} spacing={2}>
+              <TextField
+                id="outlined-basic"
+                label="Item"
+                variant="outlined"
+                fullWidth
+                defaultValue={itemName}
+                onChange={(e) => setItemName(e.target.value)}
+              />
+              <TextField
+                id="outlined-basic"
+                label="Expiration Date"
+                variant="outlined"
+                fullWidth
+                defaultValue={itemExpDate}
+                onChange={(e) => setItemExpDate(e.target.value)}
+              />
+              <IconButton
+                onClick={() => {
+                  editItem(itemName, itemExpDate)
+                  setItemName('')
+                  setItemExpDate('')
+                  handleClose()
+                }}
+              >
+                <Done fontSize="large" />
+              </IconButton>
+            </Stack>
+          </Box>
+        </Modal>
         <Box sx={{display: 'inline-block' }}>
           <Box sx={{ fontSize: 20 }}>{food.name[0].toUpperCase() + food.name.slice(1)} 
           
@@ -106,7 +166,9 @@ export default function Home() {
           "&:hover": { backgroundColor: "transparent" }, 
           verticalAlign: 'top'}}
         >
-          <Edit fontSize="small" />
+          <Edit onClick={function(){setItemName(food.name[0].toUpperCase() + food.name.slice(1)); setItemExpDate(food.expDate); handleOpen()}} fontSize="small"
+             
+          />
         </IconButton>
         <Box sx={{verticalAlign: 'top', float: 'right'}}>
           <IconButton disableRipple sx={{ 
@@ -132,7 +194,6 @@ export default function Home() {
 
   return (
     <Box width='100vw'>
-      <AppBar ></AppBar>
       <Box
           width='60vw'
           height={500}
