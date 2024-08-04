@@ -6,7 +6,8 @@ import styles from "./page.module.css";
 
 // Material UI
 import Paper from "@mui/material/Paper";
-import { Box,Grid,Stack } from '@mui/material';
+import { Box, Grid, Stack, AppBar, IconButton, TextField} from '@mui/material';
+import { Remove, Add, Edit } from '@mui/icons-material';
 import { styled } from "@mui/material/styles";
 
 // Firebase
@@ -16,8 +17,12 @@ import { firestore } from '@/firebase';
 
 const Item = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(1),
-  textAlign: "center",
-  color: theme.palette.text.secondary
+  textAlign: "left",
+  color: theme.palette.text.secondary,
+  borderRadius: 0,
+  margin: 5,
+  padding: 10,
+  height: 50
 }));
 
 export default function Home() {
@@ -73,34 +78,62 @@ export default function Home() {
     await updateInventory()
   }
 
+  const handleOpen = () => setOpen(true)
+  const handleClose = () => setOpen(false)
+
   const Food = () => {
     const items = inventory.map((food,index)=>
-      <Stack key={index} spacing={2}>{food.name}</Stack>)
-    return <Item>{items}</Item>
+      <Item key={index} spacing={2} sx={{ display: 'inline-block'}}>
+        <Box sx={{display: 'inline-block' }}>
+          <Box sx={{ fontSize: 20 }}>{food.name[0].toUpperCase() + food.name.slice(1)} 
+          
+          </Box>
+          <Box sx={{ fontSize: 12}}>{food.expDate}</Box>
+        </Box>
+        <IconButton disableRipple sx={{ 
+          "&:hover": { backgroundColor: "transparent" }, 
+          verticalAlign: 'top'}}
+        >
+          <Edit fontSize="small" />
+        </IconButton>
+        <Box sx={{verticalAlign: 'top', float: 'right'}}>
+          <IconButton disableRipple sx={{ 
+            "&:hover": { backgroundColor: "transparent" },
+            float: 'right'
+            }}
+          >
+              <Add fontSize="large" />
+          </IconButton>
+          <TextField id="outlined-basic" defaultValue={food.quantity} variant="outlined" size='small' sx={{float: 'right', width: 45, marginTop: 0.5}}/>
+          <IconButton disableRipple sx={{
+            "&:hover": { backgroundColor: "transparent" }, 
+            float: 'right'
+            }}
+          >
+            <Remove fontSize="large" sx={{
+              ":hover &": {boxShadow: '100px 5px 5px red'},
+              ":hover": {color: "#A7C7E7"}
+            }}/>
+          </IconButton>
+        </Box>
+      </Item>)
+    return <Stack>{items}</Stack>
   }
 
 
   return (
+    <Box width='100vw'>
+      <AppBar ></AppBar>
       <Box
-          width='80vw'
-          margin='0 auto 0 auto'
-          marginTop={2}
+          width='60vw'
+          height={500}
+          margin='50px auto 0 auto'
       >
-
-        <Grid container height={500} bgcolor='#F8F8F8' border={1} borderColor='#BEBEBE' borderRadius={5} >
-          <Grid 
-            xs={7.5}
-            borderRight={1}
-            borderColor='#BEBEBE'
-          >
-            <Food/>
-          </Grid>
-          <Grid 
-            xs={4.5}
-          >
-          </Grid>
-        </Grid>
+        <Box container height={500} bgcolor='#F8F8F8' border={1} borderColor='#BEBEBE'>
+          <Food marginTop={10}/>
+        </Box>
       </Box>
+    </Box>
   );
 }
 
