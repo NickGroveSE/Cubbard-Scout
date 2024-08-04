@@ -2,13 +2,12 @@ import { useState, useEffect } from 'react';
 
 // Material UI
 import Paper from "@mui/material/Paper";
-import { Box, Grid, Stack, AppBar, IconButton, TextField, Modal, Typography, Button} from '@mui/material';
-import { Remove, Add, Edit, Done } from '@mui/icons-material';
+import { Box, Stack, IconButton, TextField, Modal, Typography, Button} from '@mui/material';
+import { Remove, Add, Edit, Done, Delete } from '@mui/icons-material';
 import { styled } from "@mui/material/styles";
 
 // Firebase
-import { initializeApp } from "firebase/app";
-import { getFirestore, collection, query, where, getDocs, getDoc, doc, setDoc, deleteDoc } from "firebase/firestore";
+import { collection, query, getDocs, getDoc, doc, setDoc, deleteDoc } from "firebase/firestore";
 import { firestore } from '@/firebase';
 
 
@@ -94,13 +93,15 @@ export default function FoodList() {
     const customQuantity = async (item, itemQuantity) => {
       const docRef = doc(collection(firestore, 'inventory'), item)
       const docSnap = await getDoc(docRef)
+      const q = Number(itemQuantity)
       if (docSnap.exists()) {
         const { quantity, expDate } = docSnap.data()
-        const q = Number(itemQuantity)
+  
         await setDoc(docRef, { quantity: q, expDate: expDate })
-      } else {
-        console.log("Input is not an integer, try again")
-      }
+      } else if(q === 0) {
+        await deleteDoc(docRef)
+      } 
+      await updateInventory()
     }
 
     const editItem = async (oldItem, item, itemExpDate) => {
@@ -117,9 +118,18 @@ export default function FoodList() {
         await setDoc(docRef, { quantity: quantity, expDate: itemExpDate })
         await deleteDoc(oldDocRef)
       }
+      await updateInventory()
+    }
+
+    const deleteItem = async(item) => {
+      const docRef = doc(collection(firestore, 'inventory'), item)
+      const docSnap = await getDoc(docRef)
+
+      if (docSnap.exists()) {
+        await deleteDoc(docRef)
+      }
 
       await updateInventory()
-
     }
 
   const Item = styled(Paper)(({ theme }) => ({
@@ -143,7 +153,7 @@ export default function FoodList() {
         >
           <Box sx={style}>
             <Typography id="modal-modal-title" variant="h6" component="h2">
-              Edit Item
+              { oldItem ? "Edit Item" : "Add Item" }
             </Typography>
             <Stack width="100%" direction={'row'} spacing={2}>
               <TextField
@@ -185,9 +195,13 @@ export default function FoodList() {
           "&:hover": { backgroundColor: "transparent" }, 
           verticalAlign: 'top'}}
         >
-          <Edit onClick={function(){setOldItemName(food.name), setItemName(food.name); setItemExpDate(food.expDate); handleOpen()}} fontSize="small"
-            
-          />
+          <Edit onClick={function(){setOldItemName(food.name); setItemName(food.name); setItemExpDate(food.expDate); handleOpen()}} fontSize="small"/>
+        </IconButton>
+        <IconButton disableRipple sx={{ 
+          "&:hover": { backgroundColor: "transparent" }, 
+          verticalAlign: 'top'}}
+        >
+          <Delete onClick={() => deleteItem(food.name)} fontSize="small"/>
         </IconButton>
         <Box sx={{verticalAlign: 'top', float: 'right'}}>
           <IconButton disableRipple sx={{ 
@@ -195,7 +209,7 @@ export default function FoodList() {
             float: 'right'
             }}
           >
-              <Add onClick={() => addItem(food.name)} fontSize="large" />
+            <Add onClick={() => addItem(food.name)} fontSize="large" />
           </IconButton>
           <TextField onChange={(event) => customQuantity(food.name, event.target.value)} id="outlined-basic" defaultValue={food.quantity} variant="outlined" size='small' sx={{float: 'right', width: 45, marginTop: 0.5}}/>
           <IconButton disableRipple sx={{
