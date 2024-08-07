@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 
 // Material UI
 import Paper from "@mui/material/Paper";
-import { Box, Stack, IconButton, TextField, Modal, Typography, Button, Dialog } from '@mui/material';
-import { Remove, Add, Edit, Done, Delete} from '@mui/icons-material';
+import { Box, Stack, IconButton, TextField, Modal, Typography } from '@mui/material';
+import { Remove, Add, Edit, Done, Delete, Search} from '@mui/icons-material';
 import { styled } from "@mui/material/styles";
 
 // Firebase
@@ -34,6 +34,7 @@ export default function Home() {
   const [itemName, setItemName] = useState('')
   const [oldItemName, setOldItemName] = useState('')
   const [itemExpDate, setItemExpDate] = useState('')
+  const [searchBarVisibility, setSearchBarVisibility] = useState('none')
 
   const handleOpen = () => setOpen(true)
   const handleClose = () => setOpen(false)
@@ -128,16 +129,6 @@ export default function Home() {
     await updateInventory()
   }
 
-  const Item = styled(Paper)(({ theme }) => ({
-    padding: theme.spacing(1),
-    textAlign: "left",
-    color: theme.palette.text.secondary,
-    borderRadius: 0,
-    margin: 5,
-    padding: 10,
-    height: 50
-  }));
-
 
   return (
     <Box width='100vw'>
@@ -157,139 +148,138 @@ export default function Home() {
           }}
       >
         <Box>
-          <Box>
-          <Stack>
-            { inventory.map((food,index) => {
-            return ( 
-              <Paper key={index} spacing={2} sx={{ 
-                display: 'inline-block',
-                padding: '10px',
-                textAlign: "left",
-                borderRadius: 0,
-                margin: 1,
-                marginBottom: 0,
-                height: 50
+          <Box display={searchBarVisibility}
+              height={500}
+              sx={{
+                position: 'absolute',
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                zIndex: 1
               }}>
-              <Modal
-                open={open}
-                onClose={handleClose}
-                aria-labelledby="modal-modal-title"
-                aria-describedby="modal-modal-description"
-              >
-                <Box sx={style}>
-                  <Typography id="modal-modal-title" variant="h6" component="h2">
-                    { oldItemName ? "Edit Item" : "Add Item" }
-                  </Typography>
-                  <Stack width="100%" direction={'row'} spacing={2}>
-                    <TextField
-                      id="outlined-basic"
-                      label="Item"
-                      variant="outlined"
-                      fullWidth
-                      value={itemName}
-                      onChange={(e) => setItemName(e.target.value)}
-                    />
-                    <TextField
-                      id="outlined-basic"
-                      label="Expiration Date"
-                      variant="outlined"
-                      fullWidth
-                      onChange={(e) => setItemExpDate(e.target.value) }
-                      value={itemExpDate}
-                      // onMouseOver={(e) => e.preventDefault()}
-                      // onPointerOver={(e) => e.preventDefault()}
-                    />
-                    <IconButton
-                      onClick={() => {
-                        oldItemName ? editItem(oldItemName, itemName, itemExpDate) : addItem(itemName, itemExpDate);
-                        setItemName('')
-                        setItemExpDate('')
-                        handleClose()
+            <Box 
+              sx={{
+                backgroundColor: "white",
+                height: '100px',
+                width: '60vw'
+              }}
+            >
+            </Box>
+          </Box>
+          <Box>
+            <Stack>
+              { inventory.map((food,index) => {
+              return ( 
+                <Paper key={index} spacing={2} sx={{ 
+                  display: 'inline-block',
+                  padding: '10px',
+                  textAlign: "left",
+                  borderRadius: 0,
+                  margin: 1,
+                  marginBottom: 0,
+                  height: 50
+                }}>
+                  <Modal
+                    open={open}
+                    onClose={handleClose}
+                    aria-labelledby="modal-modal-title"
+                    aria-describedby="modal-modal-description"
+                  >
+                    <Box sx={style}>
+                      <Typography id="modal-modal-title" variant="h6" component="h2">
+                        { oldItemName ? "Edit Item" : "Add Item" }
+                      </Typography>
+                      <Stack width="100%" direction={'row'} spacing={2}>
+                        <TextField
+                          id="outlined-basic"
+                          label="Item"
+                          variant="outlined"
+                          fullWidth
+                          value={itemName}
+                          onChange={(e) => setItemName(e.target.value)}
+                        />
+                        <TextField
+                          id="outlined-basic"
+                          label="Expiration Date"
+                          variant="outlined"
+                          fullWidth
+                          onChange={(e) => setItemExpDate(e.target.value) }
+                          value={itemExpDate}
+                        />
+                        <IconButton
+                          onClick={() => {
+                            oldItemName ? editItem(oldItemName, itemName, itemExpDate) : addItem(itemName, itemExpDate);
+                            setItemName('')
+                            setItemExpDate('')
+                            handleClose()
+                          }}
+                        >
+                          <Done fontSize="large" />
+                        </IconButton>
+                      </Stack>
+                    </Box>
+                  </Modal>
+                  <Box sx={{display: 'inline-block' }}>
+                    <Box sx={{ fontSize: 20 }}>{food.name[0].toUpperCase() + food.name.slice(1)} 
+                    
+                    </Box>
+                    <Box sx={{ fontSize: 12}}>{food.expDate}</Box>
+                  </Box>
+                  <IconButton disableRipple sx={{ 
+                    "&:hover": { backgroundColor: "transparent" }, 
+                    verticalAlign: 'top'}}
+                  >
+                    <Edit onClick={function(){setOldItemName(food.name); setItemName(food.name); setItemExpDate(food.expDate); handleOpen()}} fontSize="small"/>
+                  </IconButton>
+                  <IconButton disableRipple sx={{ 
+                    "&:hover": { backgroundColor: "transparent" }, 
+                    verticalAlign: 'top'}}
+                  >
+                    <Delete onClick={() => deleteItem(food.name)} fontSize="small"/>
+                  </IconButton>
+                  <Box sx={{verticalAlign: 'top', float: 'right'}}>
+                    <IconButton disableRipple sx={{ 
+                      "&:hover": { backgroundColor: "transparent" },
+                      float: 'right'
                       }}
                     >
-                      <Done fontSize="large" />
+                      <Add onClick={() => addItem(food.name)} fontSize="large" />
                     </IconButton>
-                  </Stack>
-                </Box>
-              </Modal>
-              <Box sx={{display: 'inline-block' }}>
-                <Box sx={{ fontSize: 20 }}>{food.name[0].toUpperCase() + food.name.slice(1)} 
-                
-                </Box>
-                <Box sx={{ fontSize: 12}}>{food.expDate}</Box>
-              </Box>
-              <IconButton disableRipple sx={{ 
-                "&:hover": { backgroundColor: "transparent" }, 
-                verticalAlign: 'top'}}
-              >
-                <Edit onClick={function(){setOldItemName(food.name); setItemName(food.name); setItemExpDate(food.expDate); handleOpen()}} fontSize="small"/>
-              </IconButton>
-              <IconButton disableRipple sx={{ 
-                "&:hover": { backgroundColor: "transparent" }, 
-                verticalAlign: 'top'}}
-              >
-                <Delete onClick={() => deleteItem(food.name)} fontSize="small"/>
-              </IconButton>
-              <Box sx={{verticalAlign: 'top', float: 'right'}}>
-                <IconButton disableRipple sx={{ 
-                  "&:hover": { backgroundColor: "transparent" },
-                  float: 'right'
-                  }}
-                >
-                  <Add onClick={() => addItem(food.name)} fontSize="large" />
-                </IconButton>
-                <TextField onChange={(event) => customQuantity(food.name, event.target.value)} id="outlined-basic" defaultValue={food.quantity} variant="outlined" size='small' sx={{float: 'right', width: 45, marginTop: 0.5}}/>
-                <IconButton disableRipple sx={{
-                  "&:hover": { backgroundColor: "transparent" }, 
-                  float: 'right'
-                  }}
-                >
-                  <Remove onClick={() => removeItem(food.name)} fontSize="large"/>
-                </IconButton>
-              </Box>
-            </Paper>)
-          })}
-          </Stack>          
-          <IconButton disableRipple sx={{ 
-            "&:hover": { color: "white", backgroundColor: "green" },
-            color: "green",
-            backgroundColor: "white",
-            position: "absolute",
-            left: '81vw',
-            top: '40vh',
-            transition: "0.5s"
-            }}
-          >
-              <Add onClick={function(){setOldItemName(''); handleOpen()}} fontSize="large" />
-          </IconButton>
-        </Box>
-          
-          {/* <Modal
-              open={open}
-              onClose={handleClose}
-              aria-labelledby="modal-modal-title"
-              aria-describedby="modal-modal-description"
+                    <TextField onChange={(event) => customQuantity(food.name, event.target.value)} id="outlined-basic" defaultValue={food.quantity} variant="outlined" size='small' sx={{float: 'right', width: 45, marginTop: 0.5}}/>
+                    <IconButton disableRipple sx={{
+                      "&:hover": { backgroundColor: "transparent" }, 
+                      float: 'right'
+                      }}
+                    >
+                      <Remove onClick={() => removeItem(food.name)} fontSize="large"/>
+                    </IconButton>
+                  </Box>
+                </Paper>)
+            })}
+            </Stack>
+            <IconButton disableRipple sx={{ 
+              "&:hover": { color: "white", backgroundColor: "green" },
+              color: "green",
+              backgroundColor: "white",
+              position: "absolute",
+              left: '81vw',
+              top: '30vh',
+              transition: "0.5s"
+              }} 
+            >                
+              <Search onClick={() => (searchBarVisibility == 'none') ? setSearchBarVisibility('block') : setSearchBarVisibility('none')} fontSize="large" />
+            </IconButton>         
+            <IconButton disableRipple sx={{ 
+              "&:hover": { color: "white", backgroundColor: "green" },
+              color: "green",
+              backgroundColor: "white",
+              position: "absolute",
+              left: '81vw',
+              top: '40vh',
+              transition: "0.5s"
+              }}
             >
-              <Box sx={style}>
-                <Typography id="modal-modal-title" variant="h6" component="h2">
-                  Test
-                </Typography>
-                <Stack width="100%" direction={'row'} spacing={2}>
-                  <TextField
-                    id="outlined-basic"
-                    label="Expiration Date"
-                    variant="outlined"
-                    fullWidth
-                    onChange={(e) => setTestVal(e.target.value) }
-                    value={testVal}
-                  />
-                  <Button>
-                    Add
-                  </Button>
-                </Stack>
-              </Box>
-            </Modal> */}
-            {/* <Button onClick={handleOpen}>See Modal</Button> */}
+                <Add onClick={function(){setOldItemName(''); handleOpen()}} fontSize="large" />
+            </IconButton>
+          </Box>
         </Box>
       </Box>
     </Box>
