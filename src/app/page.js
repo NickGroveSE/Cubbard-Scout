@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 
 // Material UI
 import Paper from "@mui/material/Paper";
-import { Box, Stack, IconButton, TextField, Modal, Typography } from '@mui/material';
-import { Remove, Add, Edit, Done, Delete, Search} from '@mui/icons-material';
+import { Box, Stack, IconButton, TextField, Modal, Typography, Container } from '@mui/material';
+import { Remove, Add, Edit, Done, Delete, Search, Clear, KeyboardReturn} from '@mui/icons-material';
 import { styled } from "@mui/material/styles";
 
 // Firebase
@@ -31,10 +31,15 @@ export default function Home() {
 
   const [inventory, setInventory] = useState([])
   const [open, setOpen] = useState(false)
+
+  // Items
   const [itemName, setItemName] = useState('')
   const [oldItemName, setOldItemName] = useState('')
   const [itemExpDate, setItemExpDate] = useState('')
+
+  // Search
   const [searchBarVisibility, setSearchBarVisibility] = useState('none')
+  const [searchContent, setSearchContent] = useState('')
 
   const handleOpen = () => setOpen(true)
   const handleClose = () => setOpen(false)
@@ -129,6 +134,12 @@ export default function Home() {
     await updateInventory()
   }
 
+  const search = (content) => {
+
+    setInventory(inventory.filter(food => food.name.includes(content)))
+
+  }
+
 
   return (
     <Box width='100vw'>
@@ -148,21 +159,44 @@ export default function Home() {
           }}
       >
         <Box>
-          <Box display={searchBarVisibility}
-              height={500}
-              sx={{
-                position: 'absolute',
-                backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                zIndex: 1
-              }}>
-            <Box 
-              sx={{
-                backgroundColor: "white",
-                height: '100px',
-                width: '60vw'
+          <Box
+            display={searchBarVisibility}
+            sx={{
+              backgroundColor: "white",
+              height: '100px',
+              width: '60vw',
+              padding: '25px 20px 0 20px'
+            }}
+          >
+              <IconButton disableRipple sx={{ 
+                  "&:hover": { color: "white", backgroundColor: "red" },
+                  color: "red",
+                  backgroundColor: "white",
+                  transition: '0.5s',
+                  marginRight: '5px'
+                }}
+
+              >
+                <Clear onClick={async function(){setSearchContent(''); setSearchBarVisibility('none'); await updateInventory()}} fontSize="large" />
+              </IconButton>
+              <TextField 
+                variant="outlined" 
+                size='large' 
+                sx={{ width: '48vw'}}
+                onChange={async(e) => {setSearchContent(e.target.value); await updateInventory()}}
+                value={searchContent}
+              />
+              <IconButton disableRipple sx={{
+                  "&:hover": { color: "white", backgroundColor: "blue" },
+                  color: "blue",
+                  backgroundColor: "white",
+                  transition: '0.5s',
+                  marginLeft: '5px'
               }}
-            >
-            </Box>
+              >
+                <KeyboardReturn onClick={function(){ search(searchContent); }} 
+                  fontSize="large"/>
+              </IconButton>
           </Box>
           <Box>
             <Stack>
@@ -193,15 +227,15 @@ export default function Home() {
                           label="Item"
                           variant="outlined"
                           fullWidth
-                          value={itemName}
                           onChange={(e) => setItemName(e.target.value)}
+                          value={itemName}
                         />
                         <TextField
                           id="outlined-basic"
                           label="Expiration Date"
                           variant="outlined"
                           fullWidth
-                          onChange={(e) => setItemExpDate(e.target.value) }
+                          onChange={(e) => setItemExpDate(e.target.value)}
                           value={itemExpDate}
                         />
                         <IconButton
@@ -243,7 +277,7 @@ export default function Home() {
                     >
                       <Add onClick={() => addItem(food.name)} fontSize="large" />
                     </IconButton>
-                    <TextField onChange={(event) => customQuantity(food.name, event.target.value)} id="outlined-basic" defaultValue={food.quantity} variant="outlined" size='small' sx={{float: 'right', width: 45, marginTop: 0.5}}/>
+                    <TextField onChange={(event) => customQuantity(food.name, event.target.value)} id="outlined-basic" value={food.quantity} variant="outlined" size='small' sx={{float: 'right', width: 45, marginTop: 0.5}}/>
                     <IconButton disableRipple sx={{
                       "&:hover": { backgroundColor: "transparent" }, 
                       float: 'right'
